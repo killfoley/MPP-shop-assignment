@@ -1,6 +1,5 @@
 # Prerequisites
 *.d
-*.DS_Store
 
 # Object files
 *.o
@@ -51,3 +50,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
