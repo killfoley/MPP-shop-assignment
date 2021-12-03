@@ -49,9 +49,11 @@ struct Shop createAndStockShop()
 
 	// Open the file in "r" read only mode.
     fp = fopen("../files/stock.csv", "r");
-    if (fp == NULL)
+    
+	// Error handling if file not found
+	if (fp == NULL)
 	{
-		printf("No stock file was found");
+		printf("No customer file was found");
 		exit(EXIT_FAILURE);
 	}
 	
@@ -104,19 +106,23 @@ struct Customer createCustomer()
     size_t len = 0;
     ssize_t read;
 
-    printf("Enter Customer order file name: ");
+    printf("\nEnter Customer order file name: ");
     scanf("%s", fileName);
     
     // Conatentate strings to make the customer filename. http://www.cplusplus.com/reference/cstring/strcat/
 	// "../"+"filename"+".csv"
     strcat(fileName, ".csv");
-	printf("%s", fileName);
     char filePath[256] = "../files/";
     strcat(filePath, fileName);
-    printf("%s", filePath);
 
-    fp = fopen(fileName, "r"); 
-	printf("Opening File");
+    fp = fopen(filePath, "r"); 
+	
+	if (fp == NULL)
+	{
+		printf("No %s file was found\n", fileName);
+		exit(EXIT_FAILURE);
+	}
+
 	// the first line has the customer name and budget
     read = getline(&line, &len, fp);
     // read the first line, break into 2 pieces using the tokeniser, customer name, customer budget
@@ -181,7 +187,7 @@ int main(void)
 {
 
 	struct Shop shop = createAndStockShop();
-	printShop(shop);
+	// printShop(shop);
 	struct Customer customer = createCustomer();
 	printCustomer(customer);
 	printf("\n");
