@@ -38,19 +38,6 @@ void printProduct(struct Product p)
 	printf("Product Name: %s \nProduct Price: €%.2f\n", p.name, p.price);
 }
 
-void printCustomer(struct Customer c)
-{
-	printf("-------------\n");
-	printf("Customer Name: %s \nCustomer Budget: %.2f\n", c.name, c.budget);
-	printf("-------------\n");
-	for(int i = 0; i < c.index; i++)
-	{
-		printProduct(c.shoppingList[i].product);
-		printf("%s ORDERS %d OF ABOVE PRODUCT\n", c.name, c.shoppingList[i].quantity);
-		double cost = c.shoppingList[i].quantity * c.shoppingList[i].product.price; 
-		printf("The cost to %s will be €%.2f\n", c.name, cost);
-	}
-}
 
 // Stocking the struct shop previously declared with the following function
 struct Shop createAndStockShop()
@@ -77,12 +64,16 @@ struct Shop createAndStockShop()
 	// Assigning cash balance to the shop struct
 	struct Shop shop = {startingCash};
 
+	// While loop to get data from input file
+	// variables n, p, q are variables for product.name; product.price productstock.quantity
     while ((read = getline(&line, &len, fp)) != -1) {
 		char *n = strtok(line, ",");
 		char *p = strtok(NULL, ",");
 		char *q = strtok(NULL, ",");
+		// convert to int and floats
 		int quantity = atoi(q);
 		double price = atof(p);
+		// Dynamically allocate memory for proudct name
 		char *name = malloc(sizeof(char) * 50);
 		strcpy(name, n);
 		struct Product product = { name, price };
@@ -103,11 +94,99 @@ void printShop(struct Shop s)
 	}
 }
 
+/// read in customer from csv file
+struct Customer createCustomer()
+{   
+    FILE * fp;
+    //allocate enough memory for filename
+    char *fileName = malloc(sizeof(char) * 1000);
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    printf("Enter Customer order file name: ");
+    scanf("%s", fileName);
+    
+    // Conatentate strings to make the customer filename. http://www.cplusplus.com/reference/cstring/strcat/
+	// "../"+"filename"+".csv"
+    strcat(fileName, ".csv");
+	printf("%s", fileName);
+    char filePath[256] = "../files/";
+    strcat(filePath, fileName);
+    printf("%s", filePath);
+
+    fp = fopen(fileName, "r"); 
+	printf("Opening File");
+	// the first line has the customer name and budget
+    read = getline(&line, &len, fp);
+    // read the first line, break into 2 pieces using the tokeniser, customer name, customer budget
+    char *n = strtok(line, ","); 
+    char *b = strtok(NULL, ","); 
+    char *name = malloc(sizeof(char) * 100);
+    // avoid overwriting name each time by strtok
+    strcpy(name, n);
+    double budget = atof(b); // make it a double
+    //create a customer struct 
+    struct Customer customer = {name, budget}; 
+
+    // add while loop to read rest of csv file
+    while ((read = getline(&line, &len, fp)) != -1) {
+        // need to strcpy for product name to stop it being overwritten when using strtok
+        // product name n, quantity q on each line after line 1
+        char *n = strtok(line, ","); 
+        char *q = strtok(NULL, ","); 
+        int quantity = atoi(q); // convert to integer
+        // dynamically allocate new memory for storing the product name
+        char *pname = malloc(sizeof(char) * 20); 
+        // strcpy from pname to p to pname to avoid it being overwritten during the while loop
+		strcpy(pname, n);
+        // create a Product Struct and ProductStock struct for each item on shopping list
+        struct Product product = { pname }; 
+        struct ProductStock custItem = { product, quantity };
+        //increment index
+        customer.shoppingList[customer.index++] = custItem;
+    }
+    // return customer struct
+    return customer;
+    // this would exit the program completely but need to be the same as other versions
+    //exit(EXIT_FAILURE);        
+}
+
+void printCustomer(struct Customer c)
+{
+	printf("-------------\n");
+	printf("Customer Name: %s \nCustomer Budget: %.2f\n", c.name, c.budget);
+	printf("-------------\n");
+	for(int i = 0; i < c.index; i++)
+	{
+		printProduct(c.shoppingList[i].product);
+		printf("%s ORDERS %d OF ABOVE PRODUCT\n", c.name, c.shoppingList[i].quantity);
+		double cost = c.shoppingList[i].quantity * c.shoppingList[i].product.price; 
+		printf("The cost to %s will be €%.2f\n", c.name, cost);
+	}
+}
+// Function to display menu
+void shopMenu() {
+	fflush(stdin);
+    printf("\n");   
+    printf("\nShop Menu - Choose an option below\n");
+    printf("----------------------------------\n");
+    printf("Select 1 for Shop Overview\n");
+    printf("Select 2 for Customer order\n");
+    printf("Select 3 for Live shop mode\n");
+    printf("Select 0 to Leave the shop \n\n");
+}
+
 int main(void) 
 {
+
 	struct Shop shop = createAndStockShop();
 	printShop(shop);
+	struct Customer customer = createCustomer();
+	printCustomer(customer);
 	printf("\n");
-	
+
     return 0;
 }
+
+
