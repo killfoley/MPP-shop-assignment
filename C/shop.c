@@ -2,22 +2,28 @@
 #include <string.h>
 #include <stdlib.h>
 
+// Declare struct for products (name and price)
 struct Product {
 	char* name;
 	double price;
 };
 
+// Declare the struct for the quantity of the product
 struct ProductStock {
 	struct Product product;
 	int quantity;
 };
 
+// Declare the struct for the shop containing available cash float and product stock quantity.
+// An index is declare for looping through the rows in the file 
 struct Shop {
 	double cash;
 	struct ProductStock stock[20];
 	int index;
 };
 
+// Declare the struct for a Customer containing their name and budget variables
+// An index is declare for looping through the rows in the file
 struct Customer {
 	char* name;
 	double budget;
@@ -25,15 +31,17 @@ struct Customer {
 	int index;
 };
 
+// Function to print product details from the shop. Name an PRice
 void printProduct(struct Product p)
 {
-	printf("PRODUCT NAME: %s \nPRODUCT PRICE: %.2f\n", p.name, p.price);
 	printf("-------------\n");
+	printf("Product Name: %s \nProduct Price: €%.2f\n", p.name, p.price);
 }
 
 void printCustomer(struct Customer c)
 {
-	printf("CUSTOMER NAME: %s \nCUSTOMER BUDGET: %.2f\n", c.name, c.budget);
+	printf("-------------\n");
+	printf("Customer Name: %s \nCustomer Budget: %.2f\n", c.name, c.budget);
 	printf("-------------\n");
 	for(int i = 0; i < c.index; i++)
 	{
@@ -44,21 +52,32 @@ void printCustomer(struct Customer c)
 	}
 }
 
+// Stocking the struct shop previously declared with the following function
 struct Shop createAndStockShop()
 {
-	struct Shop shop = { 400 };
     FILE * fp;
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
 
+	// Open the file in "r" read only mode.
     fp = fopen("../files/stock.csv", "r");
     if (fp == NULL)
-        exit(EXIT_FAILURE);
+	{
+		printf("No stock file was found");
+		exit(EXIT_FAILURE);
+	}
+	
+	// method to read the first line which has the opening cash balance of the shop
+	read = getline(&line, &len, fp);
+	// Opening cash balance
+	float startingCash = atof(line);
+	// printf("cash in shop is %.2f\n", cash);
+	
+	// Assigning cash balance to the shop struct
+	struct Shop shop = {startingCash};
 
     while ((read = getline(&line, &len, fp)) != -1) {
-        // printf("Retrieved line of length %zu:\n", read);
-        // printf("%s IS A LINE", line);
 		char *n = strtok(line, ",");
 		char *p = strtok(NULL, ",");
 		char *q = strtok(NULL, ",");
@@ -69,7 +88,6 @@ struct Shop createAndStockShop()
 		struct Product product = { name, price };
 		struct ProductStock stockItem = { product, quantity };
 		shop.stock[shop.index++] = stockItem;
-		// printf("NAME OF PRODUCT %s PRICE %.2f QUANTITY %d\n", name, price, quantity);
     }
 	
 	return shop;
@@ -77,34 +95,19 @@ struct Shop createAndStockShop()
 
 void printShop(struct Shop s)
 {
-	printf("Shop has %.2f in cash\n", s.cash);
+	printf("\nThe Shop opening float is €%.2f cash\n", s.cash);
 	for (int i = 0; i < s.index; i++)
 	{
 		printProduct(s.stock[i].product);
-		printf("The shop has %d of the above\n", s.stock[i].quantity);
+		printf("Product Quantity: %d pcs\n", s.stock[i].quantity);
 	}
 }
 
 int main(void) 
 {
-	// struct Customer dominic = { "Dominic", 100.0 };
-	//
-	// struct Product coke = { "Can Coke", 1.10 };
-	// struct Product bread = { "Bread", 0.7 };
-	// // printProduct(coke);
-	//
-	// struct ProductStock cokeStock = { coke, 20 };
-	// struct ProductStock breadStock = { bread, 2 };
-	//
-	// dominic.shoppingList[dominic.index++] = cokeStock;
-	// dominic.shoppingList[dominic.index++] = breadStock;
-	//
-	// printCustomer(dominic);
-	
 	struct Shop shop = createAndStockShop();
 	printShop(shop);
-	
-// printf("The shop has %d of the product %s\n", cokeStock.quantity, cokeStock.product.name);
+	printf("\n");
 	
     return 0;
 }
