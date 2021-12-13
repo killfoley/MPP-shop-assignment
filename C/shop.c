@@ -4,7 +4,7 @@
 
 // Declare struct for products (name and price)
 struct Product {
-	char* name;
+	char *name;
 	double price;
 };
 
@@ -25,19 +25,18 @@ struct Shop {
 // Declare the struct for a Customer containing their name and budget variables
 // An index is declare for looping through the rows in the file
 struct Customer {
-	char* name;
+	char *name;
 	double budget;
 	struct ProductStock shoppingList[10];
 	int index;
 };
 
-// Function to print product details from the shop. Name an PRice
+// Function to print product details from the shop. Name an Price
 void printProduct(struct Product p)
 {
 	printf("-------------\n");
 	printf("Product Name: %s \nProduct Price: €%.2f\n", p.name, p.price);
 }
-
 
 // Stocking the struct shop previously declared with the following function
 struct Shop createAndStockShop()
@@ -117,6 +116,7 @@ struct Customer createCustomer()
 
     fp = fopen(filePath, "r"); 
 	
+	// error handling if no such file exists
 	if (fp == NULL)
 	{
 		printf("No %s file was found\n", fileName);
@@ -144,33 +144,103 @@ struct Customer createCustomer()
         int quantity = atoi(q); // convert to integer
         // dynamically allocate new memory for storing the product name
         char *pname = malloc(sizeof(char) * 20); 
-        // strcpy from pname to p to pname to avoid it being overwritten during the while loop
+        // strcpy from n to pname to avoid it being overwritten during the while loop
 		strcpy(pname, n);
         // create a Product Struct and ProductStock struct for each item on shopping list
         struct Product product = { pname }; 
         struct ProductStock custItem = { product, quantity };
-        //increment index
+        // increment index
         customer.shoppingList[customer.index++] = custItem;
     }
     // return customer struct
-    return customer;
-    // this would exit the program completely but need to be the same as other versions
-    //exit(EXIT_FAILURE);        
+    return customer;  
 }
 
-void printCustomer(struct Customer c)
+// print customer details and their shopping list
+double printCustomer(struct Customer *cust, struct Shop *shop)
 {
 	printf("-------------\n");
-	printf("Customer Name: %s \nCustomer Budget: %.2f\n", c.name, c.budget);
-	printf("-------------\n");
-	for(int i = 0; i < c.index; i++)
-	{
-		printProduct(c.shoppingList[i].product);
-		printf("%s ORDERS %d OF ABOVE PRODUCT\n", c.name, c.shoppingList[i].quantity);
-		double cost = c.shoppingList[i].quantity * c.shoppingList[i].product.price; 
-		printf("The cost to %s will be €%.2f\n", c.name, cost);
+	printf("Customer Name: %s \nCustomer Budget: %.2f\n", cust->name, cust->budget);
+	
+  // declare grand total variable
+  double grandTotal = 0.0;
+
+  // print customer's shopping list
+  printf("\nHere is %s's shopping list:\n", cust->name);
+  printf("----------\n");
+
+	for (int i = 0; i < cust->index; i++) // incremenet index variable as looping through the list)
+  {
+    // Print out shopping list name and quantity
+    printf("%s, qty. %d.\n", cust->shoppingList[i].product.name, cust->shoppingList[i].quantity); // using pointers to access shopping list
 	}
+	// check for product match from customer's shopping list with shop products in stock. Set to 0 to start and increment when a product matches
+  int billProducts = 0;
+  // declare a total quantity variable for the final bill
+  int totalQuantity = 0;
+  printf("\nChecking Stock...\n\n");
+  //loop over the items in the customer shopping list
+  for (int i = 0; i < cust->index; i++) // incremenet index variable as looping through the list)
+  {
+    // Print out current product from shopping list
+    printf("Product: %s\n", cust->shoppingList[i].product.name); // using pointers to access shopping list
+
+    // Declare variable for sub total of shopping bill. Each item will be added to this
+    double subTotal = 0;
+    // declare matchExists variable to track if a product matches. This is inside the for loop.
+    int matchExists = 0;
+    // declare Customer Product name variable shopping list items
+    char *CustomerProductName = cust->shoppingList[i].product.name; 
+
+    // Iterate through shop stock list to match items from customer's shopping list
+	  // This is inside the customer shopping list loop so use j here as iterator variable.
+    for (int j = 0; j < shop->index; j++)
+    {
+      char *ShopProductName = shop->stock[j].product.name;
+	    // if true, both product names are identical
+      if (strcmp(CustomerProductName, ShopProductName) == 0) 
+      {
+        matchExists++; // increment by one when there is a match
+        billProducts++; // add to bill items
+        // check if shop has enough stock
+        if (cust->shoppingList[i].quantity <= shop->stock[j].quantity)
+        {
+          // Calculate cost for item completely in stock
+          double subTotalItem = cust->shoppingList[i].quantity * shop->stock[j].product.price; // List qty * price
+          printf("In Stock! Line item cost will be €%.2f.\n", subTotalItem); // Prints total cost of the product
+          subTotal = subTotalItem; // sub total cost for the current item
+          totalQuantity = totalQuantity + cust->shoppingList[i].quantity;
+        }
+		    // customer wants more than in stock
+        else
+        {
+          // check max that can be purchased
+          int partialProductQty = cust->shoppingList[i].quantity - (cust->shoppingList[i].quantity - shop->stock[j].quantity); // Set to all available stock
+
+          // calculate cost for partial order quantity
+          double subTotalPartial = partialProductQty * shop->stock[j].product.price; // partial qty * price
+          printf("Unfortunately only %d in stock. Line item cost will be €%.2f.\n", partialProductQty, subTotalPartial); // Prints out cost of all items of the product
+          // add to subTotal
+          subTotal = subTotalPartial;
+          // add to quantity value
+          totalQuantity = totalQuantity + partialProductQty;
+        }
+        // add sub total to grandTotal
+        grandTotal = grandTotal + subTotal;
+      }
+    }
+    // if customer wants a product that is not in the shop
+    if (matchExists == 0) // there is no match of product
+    {
+      printf("Unfortunately %s is not in stock. You will not be charged \n", cust->shoppingList[i].product.name); // Prints out cost of all items of the product
+    }
+  }
+  // printf("%i", billProducts);
+  printf("\nThe total cost of your bill today is \n€%.2f for %i items (%i products). \n\n", grandTotal, totalQuantity, billProducts); // Prints out cost of all items of the product
+  
+  return grandTotal;
 }
+
 // Function to display menu
 void shopMenu() {
 	fflush(stdin);
@@ -187,9 +257,9 @@ int main(void)
 {
 
 	struct Shop shop = createAndStockShop();
-	// printShop(shop);
+	printShop(shop);
 	struct Customer customer = createCustomer();
-	printCustomer(customer);
+	printCustomer(&customer, &shop);
 	printf("\n");
 
     return 0;
