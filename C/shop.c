@@ -178,9 +178,8 @@ double printCustomer(struct Customer *cust, struct Shop *shop)
     // Print out shopping list name and quantity
     printf("%s, qty. %d.\n", cust->shoppingList[i].product.name, cust->shoppingList[i].quantity); // using pointers to access shopping list
 	}
-	// check for product match from customer's shopping list with shop products in stock. Set to 0 to start and increment when a product matches
+	// declare a variable for bill products and bill quantity
   int billProducts = 0;
-  // declare a total quantity variable for the final bill
   int totalQuantity = 0;
   printf("\nChecking Stock...\n\n");
   //loop over the items in the customer shopping list
@@ -191,8 +190,8 @@ double printCustomer(struct Customer *cust, struct Shop *shop)
 
     // Declare variable for sub total of shopping bill. Each item will be added to this
     double subTotal = 0;
-    // declare matchExists variable to track if a product matches. This is inside the for loop.
-    int matchExists = 0;
+    // declare valueMatch variable to track if a product matches. This is inside the for loop.
+    int valueMatch = 0;
     // declare Customer Product name variable shopping list items
     char *CustomerProductName = cust->shoppingList[i].product.name; 
 
@@ -204,14 +203,14 @@ double printCustomer(struct Customer *cust, struct Shop *shop)
 	    // if true, both product names are identical
       if (strcmp(CustomerProductName, ShopProductName) == 0) 
       {
-        matchExists++; // increment by one when there is a match
+        valueMatch++; // increment by one when there is a match
         billProducts++; // add to bill items
         // check if shop has enough stock
         if (cust->shoppingList[i].quantity <= shop->stock[j].quantity)
         {
           // Calculate cost for item completely in stock
           double subTotalItem = cust->shoppingList[i].quantity * shop->stock[j].product.price; // List qty * price
-          printf("In Stock! Line item cost will be €%.2f.\n", subTotalItem); // Prints total cost of the product
+          printf("In Stock! @ €%.2f ea. Line item cost will be €%.2f.\n", shop->stock[j].product.price, subTotalItem); // Prints total cost of the product
           subTotal = subTotalItem; // sub total cost for the current item
           totalQuantity = totalQuantity + cust->shoppingList[i].quantity;
         }
@@ -223,7 +222,7 @@ double printCustomer(struct Customer *cust, struct Shop *shop)
 
           // calculate cost for partial order quantity
           double subTotalPartial = partialProductQty * shop->stock[j].product.price; // partial qty * price
-          printf("Unfortunately only %d in stock. Line item cost will be €%.2f.\n", partialProductQty, subTotalPartial); // Prints out cost of all items of the product
+          printf("Unfortunately only %d in stock. @ €%.2f ea. Line item cost will be €%.2f.\n", partialProductQty, shop->stock[j].product.price,subTotalPartial); // Prints out cost of all items of the product
           // add to subTotal
           subTotal = subTotalPartial;
           // add to quantity value
@@ -233,10 +232,10 @@ double printCustomer(struct Customer *cust, struct Shop *shop)
         grandTotal = grandTotal + subTotal;
       }
     }
-    // if customer wants a product that is not in the shop
-    if (matchExists == 0) // there is no match of product
+      // if customer wants a product that is not in the shop
+    if (valueMatch == 0) // there is no match of product
     {
-      printf("Unfortunately %s is not in stock. You will not be charged \n", cust->shoppingList[i].product.name); // Prints out cost of all items of the product
+      printf("Unfortunately %s is not in stock. You will not be charged \n", cust->shoppingList[i].product.name);
     }
   }
   // printf("%i", billProducts);
@@ -248,22 +247,22 @@ double printCustomer(struct Customer *cust, struct Shop *shop)
 // Function to process the order. i.e. update shop stock and float
 void processOrder(struct Customer *cust, struct Shop *shop, double *grandTotal)
 {
-    printf("Processing Order...");
+    printf("Processing Order...\n");
   // Check if the customer can afford their order
   if (cust->budget < *grandTotal) // insufficient customer funds
   {
-    printf("Sorry you have insufficient funds, you are short by €%.2f.\n", (*grandTotal - cust->budget));
+    printf("Sorry, you have insufficient funds, you are short by €%.2f.\n", (*grandTotal - cust->budget));
     printf("Your order cannot be fulfilled at this time.\n");
     printf("Please try again with a smaller quantity!\n");
   }
   else // customer has enough money
   {
-    printf("Updatng the shop...\n");
+    printf("Updatng the shop...\n\n");
     //loop over the items in the customer shopping list
     for (int i = 0; i < cust->index; i++) // Using index defined in struct to keep track of items
     {
       // check whether the product from customer's shopping list matches with the shop stock list of products
-      int matchExists = 0; // initialy set to zero, assuming there is no match
+      int valueMatch = 0; // initialy set to zero, assuming there is no match
       char *customerProductName = cust->shoppingList[i].product.name; // create temp variables for cust item and shop item to make strcmp easier
 
       // Iterate through shop stock list to match items from customer's shopping list
@@ -273,7 +272,7 @@ void processOrder(struct Customer *cust, struct Shop *shop, double *grandTotal)
 
         if (strcmp(customerProductName, shopProductName) == 0) // if true, both product names are identical
         {
-          matchExists++; // increment when there is a match
+          valueMatch++; // increment when there is a match
           //check products availability
           if (cust->shoppingList[i].quantity <= shop->stock[j].quantity) // The shop has enough stock
           {
@@ -298,24 +297,20 @@ void processOrder(struct Customer *cust, struct Shop *shop, double *grandTotal)
         }
       }
       // if customer wants a product that is not in the shop
-      if (matchExists == 0) // there is no match of product
+      if (valueMatch == 0) // there is no match of product
       {
         printf("Product: %s is currently not in stock.\n", cust->shoppingList[i].product.name); // Prints out cost of all items of the product
       }
     }
-
     // update the cash in shop
     shop->cash = shop->cash + *grandTotal;
-
     // update the customer's money
     cust->budget = (cust->budget - *grandTotal);
-
+    // print out updated shop and customer
     printf("\nThe shop now has €%.2f in cash.\n", shop->cash);
     printf("\n%s's new budget is €%.2f in cash.\n", cust->name, cust->budget);
     printf("\n");
-  };
-
-  return; 
+  }
 }
 // function for live shop mode
 void shopLiveMode(struct Shop *shop)
@@ -421,19 +416,18 @@ void shopLiveMode(struct Shop *shop)
   }
 printf("\nYour total today was €%.2f.\n", liveTotal);
 printf("\nThank you for shopping in C live mode!\n");
-
 }
 
 // Function to display menu
 void shopMenu() {
 	fflush(stdin); 
-    printf("\nShop Menu - Choose an option below\n");
-    printf("----------------------------------\n");
-    printf("Select 1 for Shop Output\n");
-    printf("Select 2 for Customer order\n");
-    printf("Select 3 for Live shop mode\n");
-    printf("Select 0 to Leave the shop \n");
-    printf("----------------------------------\n");
+  printf("\nShop Menu - Choose an option below\n");
+  printf("----------------------------------\n");
+  printf("Select 1 for Shop Output\n");
+  printf("Select 2 for Customer order\n");
+  printf("Select 3 for Live shop mode\n");
+  printf("Select 0 to Leave the shop \n");
+  printf("----------------------------------\n");
 }
 
 // Function to clear the screen depending on the operating system
@@ -501,8 +495,8 @@ int main(void)
     }
   }
   printf("\n======================================\n");
-  printf("\n\nThanks for shopping in 'Shop in C'\n\n");
-  printf("\n======================================\n");
+  printf("\nThanks for shopping in 'Shop in C'\n");
+  printf("\n======================================\n\n");
   return 0;
 }
 
