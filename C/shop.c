@@ -248,11 +248,13 @@ double printCustomer(struct Customer *cust, struct Shop *shop)
 // Function to process the order. i.e. update shop stock and float
 void processOrder(struct Customer *cust, struct Shop *shop, double *grandTotal)
 {
+    printf("Processing Order...");
   // Check if the customer can afford their order
   if (cust->budget < *grandTotal) // insufficient customer funds
   {
-    printf("Sorry you have insufficient funds, you are short by €%.2f. ", (*grandTotal - cust->budget));
-    printf("Your order cannot be fulfilled at this time. Goodbye!\n\n");
+    printf("Sorry you have insufficient funds, you are short by €%.2f.\n", (*grandTotal - cust->budget));
+    printf("Your order cannot be fulfilled at this time.\n");
+    printf("Please try again with a smaller quantity!\n");
   }
   else // customer has enough money
   {
@@ -400,7 +402,7 @@ void shopLiveMode(struct Shop *shop)
           double subTotalPartial = partialProductQty * shop->stock[i].product.price;
           liveTotal = liveTotal + subTotalPartial;
           // Print out cost to customer                                             
-          printf("\nOnly %d available and that many bought. Sub-total cost was €%.2f.\n", partialProductQty, subTotalPartial);
+          printf("\nSorry only %d units available. Line item cost will be €%.2f.\n", partialProductQty, subTotalPartial);
           // update the customer's budget
           budget = budget - subTotalPartial;
           printf("\nYour new budget is: €%.2f.\n", budget);
@@ -481,21 +483,23 @@ int main(void)
       }
       else {
         double grandTotal = printCustomer(&customer, &shop);
-        processOrder(&customer, &shop, &grandTotal);
-        shopMenu();
-        }
-    }
+        // Check customer budget before processing order
+          if (grandTotal > customer.budget){
+              printf("Sorry you have insufficient funds, you are short by €%.2f.\n", (grandTotal - customer.budget));
+              printf("Your order cannot be fulfilled at this time. Please try again with a smaller quantity!\n\n");
+          }
+          else {
+              processOrder(&customer, &shop, &grandTotal);
+              shopMenu();
+              }
+        }  
+    }  
     else if (choice == 3){
         printf("\nOption 3: Live Shop Mode\n");
         shopLiveMode(&shop);
         shopMenu();
     }
   }
-	// struct Customer customer = createCustomer();
-	// double grandTotal = printCustomer(&customer, &shop);
-  // processOrder(&customer, &shop, &grandTotal);
-  // shopLiveMode(&shop);
-  // printf("\n");
   printf("\n======================================\n");
   printf("\n\nThanks for shopping in 'Shop in C'\n\n");
   printf("\n======================================\n");
