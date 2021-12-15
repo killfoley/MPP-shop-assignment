@@ -1,3 +1,7 @@
+// This program is a project for Multi-Paradigm Programming 2021
+// The program is a shop which can process csv orders or run in a live mode where products can be purchased
+// Program was created by Killian Foley - G00387875
+// Include C libraries
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -87,7 +91,7 @@ struct Shop createAndStockShop()
 
 void printShop(struct Shop *shop)
 {
-	printf("\nThe Shop opening float is €%.2f cash\n", shop->cash);
+	printf("The Shop opening float is €%.2f cash\n", shop->cash);
 	for (int i = 0; i < shop->index; i++)
 	{
 		printProduct(shop->stock[i].product);
@@ -105,7 +109,7 @@ struct Customer createCustomer()
     size_t len = 0;
     ssize_t read;
 
-    printf("\nEnter Customer order file name: ");
+    printf("\nEnter Customer order file name (without extension): ");
     scanf("%s", fileName);
     
     // Conatentate strings to make the customer filename. http://www.cplusplus.com/reference/cstring/strcat/
@@ -250,11 +254,9 @@ void processOrder(struct Customer *cust, struct Shop *shop, double *grandTotal)
     printf("Sorry you have insufficient funds, you are short by €%.2f. ", (*grandTotal - cust->budget));
     printf("Your order cannot be fulfilled at this time. Goodbye!\n\n");
   }
-
   else // customer has enough money
   {
-    printf("Processing your order...\n");
-
+    printf("Updatng the shop...\n");
     //loop over the items in the customer shopping list
     for (int i = 0; i < cust->index; i++) // Using index defined in struct to keep track of items
     {
@@ -270,7 +272,6 @@ void processOrder(struct Customer *cust, struct Shop *shop, double *grandTotal)
         if (strcmp(customerProductName, shopProductName) == 0) // if true, both product names are identical
         {
           matchExists++; // increment when there is a match
-
           //check products availability
           if (cust->shoppingList[i].quantity <= shop->stock[j].quantity) // The shop has enough stock
           {
@@ -308,7 +309,7 @@ void processOrder(struct Customer *cust, struct Shop *shop, double *grandTotal)
     cust->budget = (cust->budget - *grandTotal);
 
     printf("\nThe shop now has €%.2f in cash.\n", shop->cash);
-    printf("%s's new budget is €%.2f in cash. \n", cust->name, cust->budget);
+    printf("\n%s's new budget is €%.2f in cash.\n", cust->name, cust->budget);
     printf("\n");
   };
 
@@ -326,17 +327,17 @@ void shopLiveMode(struct Shop *shop)
   // get user's name
   printf("Please enter your name: ");
   scanf("%s", customer_name);
-  printf("\nWelcome to Shop in C, %s.\n", customer_name);
   // Get the users budget
   fflush(stdin);
-  printf("Please enter your budget: ");
+  printf("\nPlease enter your budget: ");
   scanf("%lf", &budget);
-  printf("\nYour budget is %.2f", budget);
+  printf("\nWelcome %s! Your budget today is %.2f.\n", customer_name, budget);
 
   // declare shop variables for product name and quantity
   char productName[100];
   double quantity;
-
+  // declare liveshop total spend
+  double liveTotal;
   // print shops stock
   printf("\nThe following products are available in the shop:\n");
   printShop(&(*shop));
@@ -345,11 +346,15 @@ void shopLiveMode(struct Shop *shop)
   // Use a forever loop for desired product entry until '' is entered
   while (strcmp(productName, "q") != 0)
   { 
+    // Clear input. Print was printing twice
+    fflush(stdin);
     // get customer to enter product
-    printf("\nPlease enter a product name ('q' when done): ");
+    printf("\nPlease enter a product name (Note: Products are case sensitive. Enter 'q' when done): ");
     // https://www.tutorialspoint.com/c_standard_library/c_function_fgets.htm
-    // fgets(productName, sizeof productName, stdin);
-    scanf("%s", productName);
+    fgets(productName, (int) sizeof(productName), stdin);
+    // https://stackoverflow.com/questions/18168722/using-fgets-and-strcmp-in-c?lq=1
+    // Strip the new line character 
+    productName[strlen(productName)-1] = '\0';
     // Iterate through shop stock list to match items from customer's shopping list
     for (int i = 0; i < shop->index; i++) 
     {
@@ -367,6 +372,7 @@ void shopLiveMode(struct Shop *shop)
         {
           // check product price and calculate sub-total cost (price*qty)
           subTotal = shop->stock[i].product.price * quantity;
+          liveTotal = liveTotal + subTotal;
           // check if customer can afford it
           if (budget >= subTotal)
           {
@@ -377,12 +383,12 @@ void shopLiveMode(struct Shop *shop)
             shop->stock[i].quantity = shop->stock[i].quantity - quantity;
             // update the shops cash
             shop->cash = shop->cash + subTotal;
-            printf("Stock quantity of %s in shop updated to: %d. Cash in shop now: %.2f.\n", productName, shop->stock[i].quantity, shop->cash);
+            printf("\nStock quantity of %s in shop updated to: %d. Cash in shop now: %.2f.\n", productName, shop->stock[i].quantity, shop->cash);
           }
           // Budget < than subTotal
           else
           {
-            printf("Sorry you have insufficient funds. The difference is €%.2f.\n", (subTotal - budget));
+            printf("\nSorry you have insufficient funds. The difference is €%.2f.\n", (subTotal - budget));
           }
           }
           // customer requests more than in stock
@@ -392,16 +398,17 @@ void shopLiveMode(struct Shop *shop)
           int partialProductQty = quantity - (quantity - shop->stock[i].quantity); // will buy all that is in stock
           // calculate sub total for line item
           double subTotalPartial = partialProductQty * shop->stock[i].product.price;
+          liveTotal = liveTotal + subTotalPartial;
           // Print out cost to customer                                             
-          printf("Only %d available and that many bought. Sub-total cost was €%.2f. ", partialProductQty, subTotalPartial);
+          printf("\nOnly %d available and that many bought. Sub-total cost was €%.2f.\n", partialProductQty, subTotalPartial);
           // update the customer's budget
           budget = budget - subTotalPartial;
-          printf("Your new budget is: €%.2f. \n", budget);
+          printf("\nYour new budget is: €%.2f.\n", budget);
           // update the shop stock (partial order) and cash
           shop->stock[i].quantity = shop->stock[i].quantity - partialProductQty;
           // update the shop cash
           shop->cash = shop->cash + subTotalPartial;
-          printf("Product %s is now out of stock (stock: %d).\nThe shop float is now: €%.2f.\n",shop->stock[i].product.name, shop->stock[i].quantity, shop->cash);
+          printf("\nProduct %s is now out of stock (stock: %d).\nThe shop float is now: €%.2f.\n",shop->stock[i].product.name, shop->stock[i].quantity, shop->cash);
         }
       }
       else if (strcmp(productName, shopProductName) != 0) // product not available in stock
@@ -410,33 +417,88 @@ void shopLiveMode(struct Shop *shop)
       }
     }
   }
-printf("K, Thanks. Bye!");
+printf("\nYour total today was €%.2f.\n", liveTotal);
+printf("\nThank you for shopping in C live mode!\n");
+
 }
 
 // Function to display menu
 void shopMenu() {
-	fflush(stdin);
-    printf("\n");   
+	fflush(stdin); 
     printf("\nShop Menu - Choose an option below\n");
     printf("----------------------------------\n");
-    printf("Select 1 for Shop Overview\n");
+    printf("Select 1 for Shop Output\n");
     printf("Select 2 for Customer order\n");
     printf("Select 3 for Live shop mode\n");
-    printf("Select 0 to Leave the shop \n\n");
+    printf("Select 0 to Leave the shop \n");
+    printf("----------------------------------\n");
+}
+
+// Function to clear the screen depending on the operating system
+// https://iq.opengenus.org/detect-operating-system-in-c/
+void clearScreen(){
+  #if _WIN32
+    system("cls");
+  #elif __linux__
+    system("clear");
+  #elif __unix__
+    system("clear");
+  #elif __APPLE__
+    system("clear");
+  #endif
 }
 
 int main(void) 
 {
-
+  // Clearing screen
+  clearScreen();
+  printf("Shop in C project by Killian Foley\n\n");
+  // Create and stock the shop
+  printf("Opening today's shop.\n");
 	struct Shop shop = createAndStockShop();
-	printShop(&shop);
-	struct Customer customer = createCustomer();
-	double grandTotal = printCustomer(&customer, &shop);
-  processOrder(&customer, &shop, &grandTotal);
-  shopLiveMode(&shop);
-  printf("\n");
-
-
+  // Display the shopping menu
+  shopMenu();
+  // While loop for shop menu
+  int choice = -1;
+  while (choice != 0){
+    // clear input
+    fflush(stdin);
+    // Prompt for user choice
+    printf("Please select an option from the menu: ");
+    scanf("%d", &choice);
+    
+    if (choice == 1){
+      printf("\nOption 1: Displaying Shop Stock\n");
+      printShop(&shop);
+      shopMenu();
+    }
+    else if (choice == 2){
+      printf("\nOption 2: Process Customer Order\n");
+      struct Customer customer = createCustomer();
+      if (customer.budget == 0){
+        printf("Customer has no money\n");  
+        shopMenu();
+      }
+      else {
+        double grandTotal = printCustomer(&customer, &shop);
+        processOrder(&customer, &shop, &grandTotal);
+        shopMenu();
+        }
+    }
+    else if (choice == 3){
+        printf("\nOption 3: Live Shop Mode\n");
+        shopLiveMode(&shop);
+        shopMenu();
+    }
+  }
+	// struct Customer customer = createCustomer();
+	// double grandTotal = printCustomer(&customer, &shop);
+  // processOrder(&customer, &shop, &grandTotal);
+  // shopLiveMode(&shop);
+  // printf("\n");
+  printf("\n======================================\n");
+  printf("\n\nThanks for shopping in 'Shop in C'\n\n");
+  printf("\n======================================\n");
   return 0;
 }
 
