@@ -61,13 +61,13 @@ def read_customer():
 # Function to print product name and price
 def print_product(p):
     if p.price == 0:
-        print(f'\nProduct Name: {p.name}\n')
+        print(f'\nProduct Name: {p.name}')
     else:
-        print(f'\nProduct Name: {p.name} \nProduct Price: €{p.price:.2f}\n')
+        print(f'\nProduct Name: {p.name} \nProduct Price: €{p.price:.2f}')
 
 # Function to print customer
 def print_customer(cust, shop):
-    print(f'\nCustomer Name: {cust.name} \nCustomer Budget: {cust.budget}\n')
+    print(f'\nCustomer Name: {cust.name} \nCustomer Budget: €{cust.budget:.2f}\n')
     # grandTotal variable for shopping
     grandTotal = 0.0
     billProducts = 0
@@ -84,16 +84,20 @@ def print_customer(cust, shop):
         # print(f'{cust.name} orders {item.quantity} of above product\n')
         # cost = item.quantity * item.product.price
         # print(f'The cost to {cust.name} will be €{cost}')
-    print(f'Total: {numProd:.0f} Products ({numItems:.0f} Items)')
+    print(f'Total: {numProd:.0f} Product(s) ({numItems:.0f} Items)')
     print(f'\nProcessing.......\n')
     # loop through shopping list to calculate cost
     for index, item in enumerate(cust.shopping_list):
         print(f'Product {index+1} x {item.quantity:.0f}: {item.product.name}')
         # declare variable for subtotal
         subTotal = 0.0
+        #declare counter variable for a match
+        valueMatch = 0
         # Loop through shop stock
         for prod in shop.stock:
             if (item.product.name == prod.product.name):
+                # add 1 to valueMatch
+                valueMatch += 1
                 # if there is a match add to products on the bill
                 billProducts += 1
                 # Check stock in the shop
@@ -113,8 +117,8 @@ def print_customer(cust, shop):
                     totalQuantity += partialLineItem
                     subTotal += partialLineSubTot
                 grandTotal += subTotal
-            elif (item.product.name != prod.product.name):
-                print(f'Unfortunately {item.product.name} is not in stock. You will not be charged \n')
+        if (valueMatch == 0):
+            print(f'Unfortunately {item.product.name} is not in stock. You will not be charged \n')
     print(f'The total cost of your bill today is \n€{grandTotal:.2f} for {totalQuantity:.0f} items ({billProducts:.0f} products).\n')
     return grandTotal
 
@@ -127,14 +131,46 @@ def process_order(cust, shop, grandTotal):
         print(f'Please try again with a smaller quantity!\n')
     # or if customer does have enough money
     else:
-        print(f'Updating the shop...\n\n')
+        print(f'Updating the shop...\n')
+        print(f'********************\n')
+        # iterate through shopping list items
+        for index, item in enumerate(cust.shopping_list):
+            # declare valueMatch counter for product match
+            valueMatch = 0
+            for prod in shop.stock:
+                if (item.product.name == prod.product.name):
+                    valueMatch += 1
+                    #check product availability
+                    if item.quantity <= prod.quantity:
+                        prod.quantity = prod.quantity - item.quantity
+                        print(f"Stock update: {prod.product.name} now has {prod.quantity:.0f} pcs in stock.\n")
+                    # if customer wants more than in stock
+                    else:
+                        partialOrderQty = item.quantity - (prod.quantity - item.quantity)
+                        # calculate this cost
+                        partialOrderCost = partialOrderQty * prod.product.price
+                        # update the stock
+                        prod.quantity = prod.quantity - partialOrderQty
+                        # Print stock update
+                        print(f"Stock Update: {prod.product.name} now has {prod.quantity:.0f} pcs in stock.\n")
+            if (valueMatch == 0): 
+                print(f'Product: {item.product.name} is currently not in stock.\n')
+        # update the shop's cash
+        shop.cash += grandTotal
+        # Update the customer's budget
+        cust.budget -= grandTotal
+        print(f"The shop now has €{shop.cash:.2f} in cash.\n")
+        print(f"{cust.name}'s new budget is €{cust.budget:.2f} in cash.\n")
+
+
 
 # Function to print shop stock and price
 def print_shop(shop):
     print(f'Shop has {shop.cash} in cash')
     for item in shop.stock:
         print_product(item.product)
-        print(f'The Shop has {item.quantity} of the above product')
+        print(f'Product Quantity: {item.quantity:.0f} pcs')
+
 
 
 def shopMenu():
@@ -150,7 +186,8 @@ def main():
     s = create_and_stock_shop()
     print_shop(s)
     c = read_customer()
-    print_customer(c, s)
+    grandTotal = print_customer(c, s)
+    process_order(c, s, grandTotal)
     # shopMenu()
 
 
