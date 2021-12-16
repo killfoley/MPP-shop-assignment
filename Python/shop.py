@@ -162,8 +162,6 @@ def process_order(cust, shop, grandTotal):
         print(f"The shop now has €{shop.cash:.2f} in cash.\n")
         print(f"{cust.name}'s new budget is €{cust.budget:.2f} in cash.\n")
 
-
-
 # Function to print shop stock and price
 def print_shop(shop):
     print(f'Shop has {shop.cash} in cash')
@@ -171,9 +169,80 @@ def print_shop(shop):
         print_product(item.product)
         print(f'Product Quantity: {item.quantity:.0f} pcs')
 
+def live_shop_mode(shop):
+    print(f"Welcome to Shop in Python live mode")
+    print(f"----------------------------")
+    customerName = input("Please enter your name: ")
+    budget = float(input("Please enter your budget: "))
+    print(f"Welcome {customerName} your budget today is €{budget:.2f}")
+    # declare input variables
+    productName = ""
+    quantity = 0
+    # declare total for shoppers bill
+    liveTotal = 0
+    print(f'The following products are available in the shop:')
+    print_shop(shop)
+    # start while loop for shopper to purchase products
+    while productName != "q":
+        productName = input("Please enter a product name (Note: Products are case sensitive. Enter 'q' when done): ")
+        # check for match with shop products
+        valueMatch = 0
+        for prod in shop.stock:
+            subTotal = 0
+            # if there is a match get the shoppers quantity
+            if (productName == prod.product.name):
+                valueMatch += 1
+                quantity = int(input("Enter desired quantity: "))
+                # check product stock
+                if (quantity <= prod.quantity):
+                    subTotal = quantity * prod.product.price
+                    liveTotal += subTotal
+                    # Check if the customer can afford the order
+                    if (budget >= subTotal):
+                        budget = budget - subTotal
+                        print(f"Success. Product cost was €{subTotal:.2f} Your new budget is: €{budget:.2f}.\n")
+                        # Update the shop stock
+                        prod.quantity = prod.quantity - quantity
+                        # Update the cash in the shop
+                        shop.cash += subTotal
+                        print(f"Stock quantity of {prod.product.name} in shop updated to: {prod.quantity:.0f}. Cash in shop now: €{shop.cash:.2f}.\n");
+                    else:
+                        print(f"Sorry you have insufficient funds. The difference is €{subTotal - budget:.2f}.\n")
+                # Customer requests more than in stock
+                else:
+                    # check how many can be bought
+                    partialProductQty = quantity - (quantity - prod.quantity)
+                    # calculate sub total for line item
+                    subTotalPartial = partialProductQty * shop.product.price
+                    liveTotal += subTotalPartial
+                    # Print out cost to customer                                             
+                    print(f"Sorry only {partialProductQty:.0f} pcs available. Line item cost will be €{subTotal:.2f}.\n")
+                    # update the customer's budget
+                    budget = budget - subTotalPartial
+                    print(f"Your new budget is: €{budget:.2f}.\n")
+                    # update the shop stock (partial order) and cash
+                    prod.quantity = prod.quantity - partialProductQty
+                    # update the shop cash
+                    shop.cash += subTotalPartial
+                    print(f"Product {prod.product.name} is now out of stock (stock: {prod.quantity}).\nThe shop float is now: €{shop.case:.2f}.\n")
+            elif (valueMatch == 0):
+                print(f"Product {productName} not found. Please try again.\n")
+    # Customer has quit. Print their total.
+    print(f"Your total today was €{liveTotal:.2f}\n")
+    print(f"Thank you for shopping in Python live mode!\n")
+            
+# clear screen function depending on os
+# https://www.geeksforgeeks.org/clear-screen-python/
+def clear_screen():
+    # for windows
+    if os.name == 'nt':
+        _ = os.system('cls')
+    # for mac and linux(here, os.name is 'posix')
+    else:
+        _ = os.system('clear')
 
 
-def shopMenu():
+def shop_menu():
     print(f'\nShop Menu - Choose an option below\n')
     print(f'----------------------------------\n')
     print(f'Select 1 for Shop Output\n')
@@ -183,14 +252,13 @@ def shopMenu():
     print(f'----------------------------------\n')
 
 def main():
+    clear_screen()
     s = create_and_stock_shop()
     print_shop(s)
     c = read_customer()
     grandTotal = print_customer(c, s)
     process_order(c, s, grandTotal)
-    # shopMenu()
-
-
+    # shop_menu()
 
 
 if __name__ == "__main__":

@@ -328,13 +328,14 @@ void shopLiveMode(struct Shop *shop)
   fflush(stdin);
   printf("\nPlease enter your budget: ");
   scanf("%lf", &budget);
-  printf("\nWelcome %s! Your budget today is %.2f.\n", customer_name, budget);
+  printf("\nWelcome %s! Your budget today is €%.2f.\n", customer_name, budget);
 
   // declare shop variables for product name and quantity
   char productName[100];
   double quantity;
   // declare liveshop total spend
   double liveTotal;
+  // declare valueMatch variable
   // print shops stock
   printf("\nThe following products are available in the shop:\n");
   printShop(&(*shop));
@@ -343,6 +344,7 @@ void shopLiveMode(struct Shop *shop)
   // Use a forever loop for desired product entry until '' is entered
   while (strcmp(productName, "q") != 0)
   { 
+    int valueMatch = 0;
     // Clear input. Print was printing twice
     fflush(stdin);
     // get customer to enter product
@@ -362,6 +364,7 @@ void shopLiveMode(struct Shop *shop)
       // match condition
       if (strcmp(productName, shopProductName) == 0)
       {
+        valueMatch++;
         printf("\nEnter desired quantity: ");
         scanf("%lf", &quantity);
         //check products availability
@@ -380,7 +383,7 @@ void shopLiveMode(struct Shop *shop)
             shop->stock[i].quantity = shop->stock[i].quantity - quantity;
             // update the shops cash
             shop->cash = shop->cash + subTotal;
-            printf("\nStock quantity of %s in shop updated to: %d. Cash in shop now: %.2f.\n", productName, shop->stock[i].quantity, shop->cash);
+            printf("\nStock quantity of %s in shop updated to: %d. Cash in shop now: €%.2f.\n", productName, shop->stock[i].quantity, shop->cash);
           }
           // Budget < than subTotal
           else
@@ -388,8 +391,8 @@ void shopLiveMode(struct Shop *shop)
             printf("\nSorry you have insufficient funds. The difference is €%.2f.\n", (subTotal - budget));
           }
           }
-          // customer requests more than in stock
-          else
+        // customer requests more than in stock
+        else
           {
           // check how many can be bought
           int partialProductQty = quantity - (quantity - shop->stock[i].quantity); // will buy all that is in stock
@@ -397,7 +400,7 @@ void shopLiveMode(struct Shop *shop)
           double subTotalPartial = partialProductQty * shop->stock[i].product.price;
           liveTotal = liveTotal + subTotalPartial;
           // Print out cost to customer                                             
-          printf("\nSorry only %d units available. Line item cost will be €%.2f.\n", partialProductQty, subTotalPartial);
+          printf("\nSorry only %d pcs available. Line item cost will be €%.2f.\n", partialProductQty, subTotalPartial);
           // update the customer's budget
           budget = budget - subTotalPartial;
           printf("\nYour new budget is: €%.2f.\n", budget);
@@ -408,12 +411,12 @@ void shopLiveMode(struct Shop *shop)
           printf("\nProduct %s is now out of stock (stock: %d).\nThe shop float is now: €%.2f.\n",shop->stock[i].product.name, shop->stock[i].quantity, shop->cash);
         }
       }
-      else if (strcmp(productName, shopProductName) != 0) // product not available in stock
+    }
+    if (valueMatch == 0) // product not available in stock
       {
-        printf("");
+        printf("\nProduct %s not found. Please try again.\n", productName);
       }
     }
-  }
 printf("\nYour total today was €%.2f.\n", liveTotal);
 printf("\nThank you for shopping in C live mode!\n");
 }
