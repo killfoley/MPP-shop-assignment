@@ -414,7 +414,7 @@ void shopLiveMode(struct Shop *shop)
     }
     if (valueMatch == 0) // product not available in stock
       {
-        printf("\nProduct %s not found. Please try again.\n", productName);
+        printf("\nProduct not found. Please try again.\n");
       }
     }
 printf("\nYour total today was €%.2f.\n", liveTotal);

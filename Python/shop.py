@@ -84,7 +84,7 @@ def print_customer(cust, shop):
         # print(f'{cust.name} orders {item.quantity} of above product\n')
         # cost = item.quantity * item.product.price
         # print(f'The cost to {cust.name} will be €{cost}')
-    print(f'Total: {numProd:.0f} Product(s) ({numItems:.0f} Items)')
+    print(f'Total: {numProd:.0f} Product(s) ({numItems:.0f} Item(s))')
     print(f'\nProcessing.......\n')
     # loop through shopping list to calculate cost
     for index, item in enumerate(cust.shopping_list):
@@ -119,7 +119,7 @@ def print_customer(cust, shop):
                 grandTotal += subTotal
         if (valueMatch == 0):
             print(f'Unfortunately {item.product.name} is not in stock. You will not be charged \n')
-    print(f'The total cost of your bill today is \n€{grandTotal:.2f} for {totalQuantity:.0f} items ({billProducts:.0f} products).\n')
+    print(f'The total cost of your bill today is \n\n€{grandTotal:.2f} for {totalQuantity:.0f} items ({billProducts:.0f} products).\n')
     return grandTotal
 
 def process_order(cust, shop, grandTotal):
@@ -127,8 +127,8 @@ def process_order(cust, shop, grandTotal):
     # Check if the customer can afford their order
     if (cust.budget < grandTotal):
         print(f'Sorry, you have insufficient funds, you are short by €{grandTotal - cust.budget:.2f}\n')
-        print(f'Your order cannot be fulfilled at this time.\n')
-        print(f'Please try again with a smaller quantity!\n')
+        print(f'\nYour order cannot be fulfilled at this time.')
+        print(f'\nPlease try again with a smaller quantity!\n')
     # or if customer does have enough money
     else:
         print(f'Updating the shop...\n')
@@ -171,20 +171,20 @@ def print_shop(shop):
 
 def live_shop_mode(shop):
     print(f"Welcome to Shop in Python live mode")
-    print(f"----------------------------")
-    customerName = input("Please enter your name: ")
-    budget = float(input("Please enter your budget: "))
-    print(f"Welcome {customerName} your budget today is €{budget:.2f}")
+    print(f"-----------------------------------")
+    customerName = input("\nPlease enter your name: ")
+    budget = float(input("\nPlease enter your budget: "))
+    print(f"\nWelcome {customerName} your budget today is €{budget:.2f}\n")
     # declare input variables
     productName = ""
     quantity = 0
     # declare total for shoppers bill
     liveTotal = 0
-    print(f'The following products are available in the shop:')
+    print(f'The following products are available in the shop:\n')
     print_shop(shop)
     # start while loop for shopper to purchase products
     while productName != "q":
-        productName = input("Please enter a product name (Note: Products are case sensitive. Enter 'q' when done): ")
+        productName = input("\nPlease enter a product name (Note: Products are case sensitive. Enter 'q' when done): ")
         # check for match with shop products
         valueMatch = 0
         for prod in shop.stock:
@@ -192,7 +192,7 @@ def live_shop_mode(shop):
             # if there is a match get the shoppers quantity
             if (productName == prod.product.name):
                 valueMatch += 1
-                quantity = int(input("Enter desired quantity: "))
+                quantity = int(input("\nEnter desired quantity: "))
                 # check product stock
                 if (quantity <= prod.quantity):
                     subTotal = quantity * prod.product.price
@@ -200,12 +200,12 @@ def live_shop_mode(shop):
                     # Check if the customer can afford the order
                     if (budget >= subTotal):
                         budget = budget - subTotal
-                        print(f"Success. Product cost was €{subTotal:.2f} Your new budget is: €{budget:.2f}.\n")
+                        print(f"\nSuccess. Product cost was €{subTotal:.2f} Your new budget is: €{budget:.2f}.\n")
                         # Update the shop stock
                         prod.quantity = prod.quantity - quantity
                         # Update the cash in the shop
                         shop.cash += subTotal
-                        print(f"Stock quantity of {prod.product.name} in shop updated to: {prod.quantity:.0f}. Cash in shop now: €{shop.cash:.2f}.\n");
+                        print(f"Stock quantity of {prod.product.name} in shop updated to: {prod.quantity:.0f}.\n\nCash in shop now: €{shop.cash:.2f}.");
                     else:
                         print(f"Sorry you have insufficient funds. The difference is €{subTotal - budget:.2f}.\n")
                 # Customer requests more than in stock
@@ -225,8 +225,8 @@ def live_shop_mode(shop):
                     # update the shop cash
                     shop.cash += subTotalPartial
                     print(f"Product {prod.product.name} is now out of stock (stock: {prod.quantity}).\nThe shop float is now: €{shop.case:.2f}.\n")
-            elif (valueMatch == 0):
-                print(f"Product {productName} not found. Please try again.\n")
+        if (valueMatch == 0):
+            print(f"Product not found. Please try again.\n")
     # Customer has quit. Print their total.
     print(f"Your total today was €{liveTotal:.2f}\n")
     print(f"Thank you for shopping in Python live mode!\n")
@@ -253,13 +253,52 @@ def shop_menu():
 
 def main():
     clear_screen()
-    s = create_and_stock_shop()
-    print_shop(s)
-    c = read_customer()
-    grandTotal = print_customer(c, s)
-    process_order(c, s, grandTotal)
-    # shop_menu()
+    print(f"Shop in Python (procedural) project by Killian Foley.\n")
+    # Create and stock the shop
+    print(f"Opening today's shop.")
+    shop = create_and_stock_shop()
+    # display menu first time
+    shop_menu()
+    # forever loop
+    while True:
+        # display the menu
+        choice = input("Please select an option from the menu: ")
 
+        if (choice == "1"):
+            print(f"\nOption 1: Displaying Shop stock")
+            print_shop(shop)
+            shop_menu()
+
+        elif (choice == "2"):
+            print(f"\nOption 2: Process Customer Order")
+            customer = read_customer()
+            if(customer.budget == 0):
+                print(f"Customer has no money.")
+                shop_menu()
+            else:
+                grandTotal = print_customer(customer, shop)
+                # check customer budget before processing order
+                if (grandTotal > customer.budget):
+                    print(f"Sorry you have insufficient funds, you are short by €{grandTotal - customer.budget:.2f}\n")
+                    print(f"Your order cannot be fulfilled at this time.\n\nPlease try again with a smaller quantity!\n")
+                    shop_menu()
+                else:
+                    process_order(customer, shop, grandTotal)
+                    shop_menu()
+        
+        elif (choice == "3"):
+            print(f"\nOption 3: Live Shop Mode\n")
+            live_shop_mode(shop)
+            shop_menu()
+    
+        elif(choice == "0"):
+            print(f"\n======================================\n")
+            print(f"Thanks for shopping in 'Shop in Python'\n")
+            print(f"======================================\n")
+            break;
+
+        else:
+            shop_menu()
 
 if __name__ == "__main__":
     main()
