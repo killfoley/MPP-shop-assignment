@@ -108,24 +108,38 @@ class Customer:
         
 # Create a live mode sub class of customer to use customer methods
 class Live_Mode(Customer):
-    def __init__(self):
+    def __init__(self, Shop):
         self.shopping_list = []
-        self.custName = input("\nPlease enter your name: ")
-        self.budget = float(input("\nPlease enter your budget: "))        
+        self.name = input("Please enter your name: ")
+        self.budget = float(input("\nPlease enter your budget: "))
+        print(f'\nWelcome {self.name} your budget today is €{self.budget:.2f}\n')     
+        print(f'The following products are available in the shop:\n')
+        print(Shop) 
+        
+    # Method to get the live customer list
+    def get_list(self, Shop):
         # declare product and quantity variables to append to shopping list. Similar to csv file input
         productName = ""
         quantity = 0
-        while productName != "q":
+        # while loop to take customer products
+        while (productName != "q"):
             productName = input("\nPlease enter a product name (Note: Products are case sensitive. Enter 'q' when done): ")
-            quantity = int(input("\nEnter desired quantity: "))
-        
-        # append the items to the shopping list
-        p = Product(productName)
-        ps = ProductStock(p, quantity)
-        self.shopping_list.append(ps)
+            # loop through shop items for a match. This wouldn't be efficient for a larger stock. But deemed sufficient here.
+            for shop_item in Shop.stock:
+                # if there is a product match then request quantity and append to shopping list.
+                if (productName == shop_item.name()): #(productName != "q") and 
+                    quantity = int(input("\nEnter desired quantity: "))
+                    # append the items to the shopping list
+                    p = Product(productName)
+                    ps = ProductStock(p, quantity)
+                    self.shopping_list.append(ps)
+                    break;
+            else:
+                print(f'\nSorry item not in stock please try another product.')
+        # for testing print(self.shopping_list)
 
-
-
+# create a shop class
+# the shop class stores the stock, calculates cost based off customer basket 
 class Shop:
     
     def __init__(self, path):
@@ -148,8 +162,9 @@ class Shop:
             str += f"{item}"
         return str
 
-    def process_order():
-        pass
+    def process_order(self, c):
+        print(f'Processing your order...\n')
+        
 
     def update_cash():
         pass
@@ -162,7 +177,7 @@ class Shop:
 
     def shop_menu(self):
         while True: 
-            print(f'\nShop Menu - Choose an option below\n')
+            print(f'Shop Menu - Choose an option below\n')
             print(f'----------------------------------\n')
             print(f'Select 1 for Shop Output\n')
             print(f'Select 2 for Customer order\n')
@@ -184,11 +199,19 @@ class Shop:
                 print(c)
                 # 
                 self.process_order(c)
-                self.display_menu()
 
 
             elif (self.choice == "3"):
                 print(f"\nOption 3: Live Shop Mode\n")
+                c = Live_Mode(self)
+                c.get_list(self)
+                # calculate live method similar to csv method
+                c.calculate_costs(self.stock)
+                # print out the customer order and basket details
+                print(c)
+                # process the customer order
+                #self.process_order(cl)
+
 
             elif (self.choice == "0"):
                 print(f"\n======================================\n")
@@ -214,12 +237,6 @@ def main():
     s = Shop("../files/stock.csv")
     s.shop_menu()
     
-    '''
-    print(s)
-    c = Customer()
-    c.calculate_costs(s.stock)
-    print(c)
-    '''
     
 if __name__ == "__main__":
     main()
