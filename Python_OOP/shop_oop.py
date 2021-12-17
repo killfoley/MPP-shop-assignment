@@ -1,5 +1,6 @@
 import csv
 import os
+from sys import exit
 
 # Create a product class
 class Product:
@@ -45,14 +46,14 @@ class ProductStock:
         
     # repr method to return product name and available stock
     def __repr__(self):
-        return f"Product Name: {self.product}, Product Stock: {self.quantity:.0f} pcs"
+        return f'\nName:\t{self.product.name}\nPrice:\t€{self.product.price:.2f}\nStock:\t{self.quantity:.0f} pcs\n{"-"*15}\n'
 
 # Create a customer class to store customer details
 class Customer:
 
     def __init__(self):
         self.shopping_list = []
-        self.fileName = input("Please enter customer file name (without extension): ")
+        self.fileName = input("\bPlease enter customer file name (without extension): ")
         filePath = "../files/" + self.fileName + ".csv"
         with open(filePath) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
@@ -89,22 +90,42 @@ class Customer:
 
     def __repr__(self):
         out_str = f"\nCustomer Name: {self.name} \nCustomer Budget: €{self.budget:.2f}\n"
-        out_str += f"Here is {self.name}'s shopping list:"
-        out_str += f"-----------------------------------"
+        out_str += f"\nHere is {self.name}'s shopping list:\n"
+        out_str += f"-----------------------------------\n\n"
         numItems = 0
         for item in self.shopping_list:
-            out_str += f"{item.name()}, qty. {item.quantity}"
+            out_str += f"{item.name()}, qty. {item.quantity:.0f}\n"
             cost = item.cost()
             numItems += item.quantity
             # out_str += f"\n{item}"
             if (cost == 0):
-                out_str += f" {self.name} doesn't know how much that costs :("
+                out_str += f"No price available. Product might be out of stock.\n"
             else:
-                out_str += f" COST: {cost}"
-        out_str += f"Total: {self.num_Products:.0f} Product(s) ({numItems:.0f} Item(s))\n"
-        out_str += f"\nThe total cost of your bill today is \n\n{self.order_cost():.2f} for {numItems:.0f} items ({self.num_Products:.0f} product(s)).\n"
+                out_str += f"Cost: €{cost:.2f} @ €{item.unit_price():.2f} ea.\n\n"
+        out_str += f"\nBasket summary: {self.num_products():.0f} Product(s) ({numItems:.0f} Item(s))\n"
+        out_str += f"\nThe total cost of your bill today is \n\n€{self.order_cost():.2f} for {numItems:.0f} items ({self.num_products():.0f} product(s)).\n"
         return out_str 
         
+# Create a live mode sub class of customer to use customer methods
+class Live_Mode(Customer):
+    def __init__(self):
+        self.shopping_list = []
+        self.custName = input("\nPlease enter your name: ")
+        self.budget = float(input("\nPlease enter your budget: "))        
+        # declare product and quantity variables to append to shopping list. Similar to csv file input
+        productName = ""
+        quantity = 0
+        while productName != "q":
+            productName = input("\nPlease enter a product name (Note: Products are case sensitive. Enter 'q' when done): ")
+            quantity = int(input("\nEnter desired quantity: "))
+        
+        # append the items to the shopping list
+        p = Product(productName)
+        ps = ProductStock(p, quantity)
+        self.shopping_list.append(ps)
+
+
+
 class Shop:
     
     def __init__(self, path):
@@ -121,24 +142,62 @@ class Shop:
 
     def __repr__(self):
         str = ""
-        str += f'Shop has €{self.cash} in cash\n'
+        str += f'Shop has €{self.cash:.2f} in cash\n'
+        str += f'\nProduct Details:\n'
         for item in self.stock:
-            str += f"{item}\n"
+            str += f"{item}"
         return str
 
-def shop_menu(self):
-    while True: 
-        print(f'\nShop Menu - Choose an option below\n')
-        print(f'----------------------------------\n')
-        print(f'Select 1 for Shop Output\n')
-        print(f'Select 2 for Customer order\n')
-        print(f'Select 3 for Live shop mode\n')
-        print(f'Select 0 to Leave the shop \n')
-        print(f'----------------------------------\n')
+    def process_order():
+        pass
 
-        self.choice = input("")
+    def update_cash():
+        pass
+
+    def check_stock():
+        pass
+
+    def update_stock():
+        pass
+
+    def shop_menu(self):
+        while True: 
+            print(f'\nShop Menu - Choose an option below\n')
+            print(f'----------------------------------\n')
+            print(f'Select 1 for Shop Output\n')
+            print(f'Select 2 for Customer order\n')
+            print(f'Select 3 for Live shop mode\n')
+            print(f'Select 0 to Leave the shop \n')
+            print(f'----------------------------------\n')
+
+            self.choice = input("Please select an option from the menu: ")
+
+            if (self.choice == "1"):
+                print(f"\nOption 1: Displaying Shop stock\n")
+                print(self)
+
+            elif (self.choice == "2"):
+                print(f"\nOption 2: Process Customer Order\n")
+                c = Customer()
+                c.calculate_costs(self.stock)
+                # print out the customer order and basket details
+                print(c)
+                # 
+                self.process_order(c)
+                self.display_menu()
 
 
+            elif (self.choice == "3"):
+                print(f"\nOption 3: Live Shop Mode\n")
+
+            elif (self.choice == "0"):
+                print(f"\n======================================\n")
+                print(f"Thanks for shopping in 'Shop in Python'\n")
+                print(f"======================================\n")
+                exit()
+
+            else:
+                print(f'\nInvalid option please try again')
 
 def clear_screen():
     # for windows
@@ -153,14 +212,14 @@ def main():
     print(f"Shop in Python (object oriented) project by Killian Foley.\n")
     # create and stock the shop
     s = Shop("../files/stock.csv")
-    # s.shop_menu()
+    s.shop_menu()
     
-    
+    '''
     print(s)
     c = Customer()
     c.calculate_costs(s.stock)
     print(c)
-
+    '''
     
 if __name__ == "__main__":
     main()
