@@ -203,16 +203,19 @@ class Shop:
             print(f"Product: {self.product.name()}\nProduct total = €{self.lineItemCost:.2f} for {self.lineQty} pc(s).\n")
             self.cash += self.lineItemCost
             c.budget -= self.lineItemCost
-        # if customer cannot pay, then sale does not go ahead. 
         elif c.budget < self.lineItemCost:
             print(f"Sorry you have insufficient funds, you are short by €{custTotal - c.budget:.2f}\n")
             print(f"Your order cannot be fulfilled at this time.\n\nPlease try again with a smaller quantity!\n")
+        # if customer cannot pay, then sale does not go ahead.
         return c.budget, self.cash
             
     # method for processing order. inputs self and customer. Returns customer new budget
     def process_order(self,c):
+        # cust total
+        custTotal = c.order_cost()
         # create a list of items for stock updates
         self.stock_items = []
+        custTotal = c.order_cost()
         print(f"Processing your order\n")
         self.lineItemCost = 0
         print(f"Calculating costs\n")
@@ -220,19 +223,24 @@ class Shop:
             for shop_item in self.stock:
                 if (list_item.name() == shop_item.name()):
                     self.stock_items.append(shop_item)
-        for list_item in c.shopping_list:
-            # call the method to check stock
-            self.check_stock(list_item)
-            # call the method to update cash or not
-            self.update_cash(c)
-        # print stock updates for purchased items
-        print(f"Updating shop\n")
-        for stock_item in self.stock_items:
-            print(f"Stock update: {stock_item.name()} now has {stock_item.quantity:.0f} pcs in stock\n")
-        # print out new shop float
-        print(f"The shop now has €{self.cash:.2f} in cash.\n")
-        # print out new customer budget
-        print(f"{c.name}\'s new budget is €{c.budget:.2f}\n")
+        # first check budget before processing.
+        if c.budget < c.order_cost():
+            print(f"Sorry you have insufficient funds, you are short by €{custTotal - c.budget:.2f}\n")
+            print(f"Your order cannot be fulfilled at this time.\n\nPlease try again with a smaller quantity!\n")
+        else:    
+            for list_item in c.shopping_list:
+                # call the method to check stock
+                self.check_stock(list_item)
+                # call the method to update cash or not
+                self.update_cash(c)
+            # print stock updates for purchased items
+            print(f"Updating shop\n")
+            for stock_item in self.stock_items:
+                print(f"Stock update: {stock_item.name()} now has {stock_item.quantity:.0f} pcs in stock\n")
+            # print out new shop float
+            print(f"The shop now has €{self.cash:.2f} in cash.\n")
+            # print out new customer budget
+            print(f"{c.name}\'s new budget is €{c.budget:.2f}\n")
 
     def shop_menu(self):
         while True: 
