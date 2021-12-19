@@ -286,6 +286,9 @@ def main():
                     print(f"Sorry you have insufficient funds, you are short by €{grandTotal - customer.budget:.2f}\n")
                     print(f"Your order cannot be fulfilled at this time.\n\nPlease try again with a smaller quantity!\n")
                     shop_menu()
+                elif (grandTotal == 0):
+                    print(f"Please update your shopping list to include items currently in stock.\n")
+                    shop_menu()
                 else:
                     process_order(customer, shop, grandTotal)
                     shop_menu()
