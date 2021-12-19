@@ -57,7 +57,7 @@ class Customer:
                 p = Product(name)
                 ps = ProductStock(p, quantity)
                 self.shopping_list.append(ps) 
-                
+    
     def calculate_costs(self, price_list):
         # loop through items in shop first
         for shop_item in price_list:
@@ -257,6 +257,8 @@ class Shop:
                 c = Customer()
                 # perform a check if customer has a budget
                 if (c.budget == 0):
+                    c.calculate_costs(self.stock)
+                    print(c)
                     print(f'Customer has no money.\n')
                     self.shop_menu()
                 # if customer budget != proceed.
@@ -264,13 +266,14 @@ class Shop:
                     # Calculate grandTotal of customer order
                     c.calculate_costs(self.stock)
                     grandTotal = c.order_cost()
+                    print(c)
                     # if customer order total > than their budget let them know to reduce order qtys
-                    if (grandTotal > c.budget):
-                        print(f"\nSorry you have insufficient funds, you are short by €{grandTotal - c.budget:.2f}\n")
-                        print(f"Your order cannot be fulfilled at this time.\n\nPlease try again with a smaller quantity!\n")
-                        self.shop_menu()
+                    #if (grandTotal > c.budget):
+                        #print(f"\nSorry you have insufficient funds, you are short by €{grandTotal - c.budget:.2f}\n")
+                        #print(f"Your order cannot be fulfilled at this time.\n\nPlease try again with a smaller quantity!\n")
+                        #self.shop_menu()
                     # check if customer total is 0
-                    elif (grandTotal == 0):
+                    if (grandTotal == 0):
                         print(f"Please update your shopping list to include items currently in stock.\n")
                         self.shop_menu()
                     # if customer has enough money then process their order
@@ -296,6 +299,8 @@ class Shop:
                 print(c)
                 # process the customer order
                 self.process_order(c)
+                print(f"Thank you for shopping in Python live mode!\n")
+                self.shop_menu()
 
 
             elif (self.choice == "0"):

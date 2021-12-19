@@ -229,7 +229,10 @@ def live_shop_mode(shop):
                     # update the shop cash
                     shop.cash += subTotalPartial
                     print(f"Product {prod.product.name} is now out of stock (stock: {prod.quantity}).\nThe shop float is now: €{shop.case:.2f}.\n")
-        if (valueMatch == 0):
+        # ignore if == q. This is to quit.
+        if productName == "q":
+            print(f"")
+        elif (valueMatch == 0):
             print(f"Product not found. Please try again.\n")
     # Customer has quit. Print their total.
     print(f"Your total today was €{liveTotal:.2f}\n")

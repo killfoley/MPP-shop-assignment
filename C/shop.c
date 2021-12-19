@@ -412,7 +412,10 @@ void shopLiveMode(struct Shop *shop)
         }
       }
     }
-    if (valueMatch == 0) // product not available in stock
+    if (strcmp(productName, "q") == 0){
+      printf("");
+    }
+    else if (valueMatch == 0) // product not available in stock
       {
         printf("\nProduct not found. Please try again.\n");
       }
@@ -484,7 +487,9 @@ int main(void)
           if (grandTotal > customer.budget){
               printf("Sorry you have insufficient funds, you are short by €%.2f.\n", (grandTotal - customer.budget));
               printf("Your order cannot be fulfilled at this time. Please try again with a smaller quantity!\n\n");
+              shopMenu();
           }
+          
           else {
               processOrder(&customer, &shop, &grandTotal);
               shopMenu();
