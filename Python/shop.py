@@ -78,7 +78,7 @@ def print_customer(cust, shop):
     numItems = 0
     print(f'---------------')
     for item in cust.shopping_list:
-        print(f'{item.product.name} qty. {item.quantity}')
+        print(f'{item.product.name} qty. {item.quantity:.0f}')
         numItems += item.quantity
         # print_product(item.product)
         # print(f'{cust.name} orders {item.quantity} of above product\n')
@@ -108,7 +108,10 @@ def print_customer(cust, shop):
                     # add to bill item quantity
                     totalQuantity += item.quantity
                     print(f'In Stock! @ €{prod.product.price:.2f} ea. Line item cost will be €{lineTotal:.2f}.\n')
-                else:
+                # Check zero condition first
+                elif (prod.quantity == 0):
+                    print(f'{item.product.name} is currently not in stock. You will not be charged.\n')
+                elif (item.quantity > prod.quantity):
                     # check the amount that can be bought
                     partialLineItem = item.quantity - (item.quantity - prod.quantity)
                     partialLineSubTot = partialLineItem * prod.product.price
@@ -116,6 +119,7 @@ def print_customer(cust, shop):
                     # Add to Products on the bill and subTotal
                     totalQuantity += partialLineItem
                     subTotal += partialLineSubTot
+                # add the subtotal to the grand total
                 grandTotal += subTotal
         if (valueMatch == 0):
             print(f'Unfortunately {item.product.name} is not in stock. You will not be charged \n')
@@ -134,19 +138,19 @@ def process_order(cust, shop, grandTotal):
         print(f'Updating the shop...\n')
         print(f'********************\n')
         # iterate through shopping list items
-        for index, item in enumerate(cust.shopping_list):
+        for item in cust.shopping_list:
             # declare valueMatch counter for product match
             valueMatch = 0
             for prod in shop.stock:
                 if (item.product.name == prod.product.name):
                     valueMatch += 1
                     #check product availability
-                    if item.quantity <= prod.quantity:
+                    if (item.quantity <= prod.quantity):
                         prod.quantity = prod.quantity - item.quantity
                         print(f"Stock update: {prod.product.name} now has {prod.quantity:.0f} pcs in stock.\n")
                     # if customer wants more than in stock
-                    else:
-                        partialOrderQty = item.quantity - (prod.quantity - item.quantity)
+                    elif (item.quantity > prod.quantity):
+                        partialOrderQty = item.quantity - (item.quantity - prod.quantity)
                         # calculate this cost
                         partialOrderCost = partialOrderQty * prod.product.price
                         # update the stock

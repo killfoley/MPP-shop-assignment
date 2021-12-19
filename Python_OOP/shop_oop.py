@@ -35,6 +35,15 @@ class ProductStock:
     def get_quantity(self):
         return self.quantity
 
+    # method to return product
+    def get_product(self):
+        return self
+    
+    # method to update stock quantity
+    def set_quantity(self, itemQty):
+        self.quantity -= itemQty
+
+
     # method to update the quantity of stock after an order is processed
     def update_quantity(self, custQty):
         self.quantity -= custQty
@@ -101,7 +110,7 @@ class Customer:
             if (cost == 0):
                 out_str += f"No price available. Product might be out of stock.\n"
             else:
-                out_str += f"Cost: €{cost:.2f} @ €{item.unit_price():.2f} ea.\n\n"
+                out_str += f"Cost: €{cost:.2f} @ €{item.unit_price():.2f} ea.\n"
         out_str += f"\nBasket summary: {self.num_products():.0f} Product(s) ({numItems:.0f} Item(s))\n"
         out_str += f"\nThe total cost of your bill today is \n\n€{self.order_cost():.2f} for {numItems:.0f} items ({self.num_products():.0f} product(s)).\n"
         return out_str 
@@ -162,28 +171,87 @@ class Shop:
             str += f"{item}"
         return str
 
-    def process_order(self, c):
-        print(f'Processing your order...\n')
+    # method to check stock
+    def check_stock(self, list_item):
+            # checking the stock
+            for shop_item in self.stock:
+                # if the shop does stock the customer item
+                if (list_item.name() == shop_item.name()): 
+                    # assign shop_item name to product_name variable
+                    self.product_name = shop_item.name()
+                    # get the product stock details and return the product for the update stock method to use
+                    self.product = shop_item.get_product()
+                    # checking if there is enough stock 
+                    if list_item.quantity <= shop_item.quantity:
+                        # enough in stock. Line item cost = qty * price
+                        self.lineItemCost = list_item.quantity * shop_item.product.price
+                        # store the line item quantity for updating shop stock
+                        self.lineQty = list_item.quantity
+                        return self.lineItemCost, self.product, self.lineQty, self.product_name
+
+                    #
+
+                    # checking if the customer order quantity is more than shop has in stock
+                    elif (list_item.quantity > shop_item.quantity):
+                        # total product cost is based on partial order if thats all that is available   
+                        self.lineItemCost = shop_item.quantity *shop_item.product.price
+                        self.lineQty = shop_item.quantity
+                        print(f"Sorry only {shop_item.quantity:.0f} pcs available of {list_item.name()}. Line item cost will be €{self.lineItemCost:.2f}.\n")     
+                        return self.lineItemCost, self.product, self.lineQty, self.product_name
+                
+                
+                # if the customer product is not stocked, sale quantity is zero and no cost to customer. Avoid printing out later
+                if (list_item.name() != shop_item.name()):
+                    self.product = list_item
+                    self.lineQty = 0
+                    self.lineItemCost = 0
+
+    # method to update cash in the shop
+    def update_cash(self,c):
+        custTotal = c.order_cost()
+        # only print for actual sale quantities
+        if self.lineQty>0:
+            print(f"Product: {self.product.name()}\nProduct total = €{self.lineItemCost:.2f} for {self.lineQty} pc(s).\n")
+            self.cash += self.lineItemCost
+            c.budget -= self.lineItemCost
+        # if customer cannot pay, then sale does not go ahead. 
+        elif c.budget < self.lineItemCost:
+            print(f"Sorry you have insufficient funds, you are short by €{custTotal - c.budget:.2f}\n")
+            print(f"Your order cannot be fulfilled at this time.\n\nPlease try again with a smaller quantity!\n")
+        return c.budget, self.cash
+
+    # method to update stock
+    def update_stock(self, product):
+        # call ProductStock methods to update the quantity in stock
+        product.set_quantity(self.lineQty)
         
 
-    def update_cash():
-        pass
+    # method for processing order. inputs self and customer. Returns customer new budget
+    def process_order(self,c):
+        print(f"Checking Stock\n")
+        self.lineItemCost = 0 
 
-    def check_stock():
-        pass
-
-    def update_stock():
-        pass
+        for list_item in c.shopping_list:
+            # call the method to check stock
+            self.check_stock(list_item)
+            # call the method to update cash or not
+            self.update_cash(c)
+            # call method to update stock based on quantities in stock as checked by check_stock method
+            self.update_stock(self.product)
+        # add new budget to output string
+        print(f"The shop now has €{self.cash:.2f} in cash.\n")
+        print(f"{c.name}\'s new budget is €{c.budget:.2f}\n")
 
     def shop_menu(self):
         while True: 
+            print(f'**********************************\n')
             print(f'Shop Menu - Choose an option below\n')
-            print(f'----------------------------------\n')
+            print(f'**********************************\n')
             print(f'Select 1 for Shop Output\n')
             print(f'Select 2 for Customer order\n')
             print(f'Select 3 for Live shop mode\n')
             print(f'Select 0 to Leave the shop \n')
-            print(f'----------------------------------\n')
+            print(f'**********************************\n')
 
             self.choice = input("Please select an option from the menu: ")
 
@@ -192,13 +260,32 @@ class Shop:
                 print(self)
 
             elif (self.choice == "2"):
-                print(f"\nOption 2: Process Customer Order\n")
+                print(f"\nOption 2: Process Customer Order\n")  
+                # Create a customer by uploading a customer csv file
                 c = Customer()
-                c.calculate_costs(self.stock)
+                # perform a check if customer has a budget
+                if (c.budget == 0):
+                    print(f'Customer has no money.\n')
+                    self.shop_menu()
+                # if customer budget != proceed.
+                else:
+                    # Calculate grandTotal of customer order
+                    grandTotal = c.order_cost()
+                    # if customer order total > than their budget let them know to reduce order qtys
+                    if (grandTotal > c.budget):
+                        print(f"Sorry you have insufficient funds, you are short by €{grandTotal - c.budget:.2f}\n")
+                        print(f"Your order cannot be fulfilled at this time.\n\nPlease try again with a smaller quantity!\n")
+                        self.shop_menu()
+                    # if customer has enough money then process their order
+                    else:
+                        c.calculate_costs(self.stock)
+                        print(c)
+                        self.process_order(c)
+                # c.calculate_costs(self.stock)
                 # print out the customer order and basket details
-                print(c)
+                #print(c)
                 # 
-                self.process_order(c)
+                #self.process_order(c)
 
 
             elif (self.choice == "3"):
